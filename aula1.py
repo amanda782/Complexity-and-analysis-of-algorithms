@@ -1,5 +1,6 @@
 # create an array with 10.000 int values (randomized). order the array and verify which values are prime numbers
 import random
+import time
 
 # ordering with merge sort
 def merge_sort(arr):
@@ -57,7 +58,7 @@ def is_prime(n):
             return False
         i += 2
     return True
-
+    
 # try to find primes on the array
 def find_primes(arr):
     primes = []
@@ -66,39 +67,23 @@ def find_primes(arr):
             primes.append(arr[i])
     return primes
 
-# build the array with 10.000 random values (0 to 15.000)
-numbers = [0] * 10000
-for i in range(10000):
-    numbers[i] = random.randint(0, 15000)
+inicio = time.perf_counter()
+fim = time.perf_counter()
 
-# sort it once so both options can reuse the sorted array
+# build the array with n random values (0 to 15.000)
+n = 10000
+numbers = [0] * n
+
+for i in range(n):
+    numbers[i] = random.randint(0, 15000)
+    
+# sort the array
 sorted_array = merge_sort(numbers)
 
-# simple menu to choose the feature
-while True:
-    print("")
-    print("==========================")
-    print("1 - Show the sorted array")
-    print("2 - Show the prime numbers")
-    print("0 - Exit")
-    print("==========================")
-    print("")
+# verify if the array is ordered
+for i in range(20):
+    print(sorted_array[i])
 
-    option = input("Choose an option: ")
-
-    if option == "1":
-        print("The complete sorted array is:")
-        print("")
-        print(sorted_array)
-    elif option == "2":
-        primes = find_primes(sorted_array)
-        print("Found", len(primes), "prime numbers on this array:")
-        print("")
-        print(primes)
-    elif option == "0":
-        break                        
-    else:
-        print("Invalid option")
-
-
-
+tempo_total = (fim - inicio) * 100000
+print(f"Tempo: {tempo_total:.2f} ms")
+  

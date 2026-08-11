@@ -1,37 +1,44 @@
 # create an array with 10.000 int values (randomized). order the array and verify which values are prime numbers
 import random
 import time
+import sys
+sys.setrecursionlimit(1000000)
+
 
 def mergeFinal(arr):
     inicioMerge = time.perf_counter()
-    result = merge_sort(arr)
+    result, comparacoes = merge_sort(arr)
     fimMerge = time.perf_counter()
     tempo_total_merge = (fimMerge - inicioMerge) * 1000
     print(f"Tempo merge: {tempo_total_merge:.2f} ms")
+    print(f"Comparacoes na ordenacao: {comparacoes}")
     return result
 
 
-# ordering with merge sort
+# ordering with merge sort. returns (sorted_array, number_of_comparisons)
 def merge_sort(arr):
     if(len(arr) <=1):
-        return arr
+        return arr, 0
 
     middle = len(arr)//2
     left = arr[:middle]
     right = arr[middle:]
 
-    left = merge_sort(left)
-    right = merge_sort(right)
-    return(merge(left, right))
+    left, comp_left = merge_sort(left)
+    right, comp_right = merge_sort(right)
+    merged, comp_merge = merge(left, right)
+    return merged, comp_left + comp_right + comp_merge
 
-# receives two sorted arrays and returns a single sorted array
+# receives two sorted arrays and returns (single sorted array, comparisons made)
 def merge(left, right):
     result = [0] * (len(left) + len(right))
+    comparacoes = 0
     k=0
     i = 0
     j=0
 
     while i < len(left) and j < len(right):
+        comparacoes += 1  # count each comparison between two elements
         if(left[i] <= right[j]):
             result[k] = left[i]
             i+=1
@@ -50,7 +57,7 @@ def merge(left, right):
         j += 1
         k += 1
 
-    return result
+    return result, comparacoes
 
 # verify if its prime
 def is_prime(n):
@@ -93,20 +100,25 @@ def gerar(n):
 
 
 inicioTotal = time.perf_counter()
-n = 1000
-# generate ONE array and keep the original (unordered) reference
+n = 50000
+
+# generate ONE array; TempoGerar is SHARED by both scenarios of this size
 array_desordenado = gerar(n)
-# sort the SAME array
-sorted_array = mergeFinal(array_desordenado)
-sorted_again_array = mergeFinal(sorted_array)
+
+# ----- Cenario [Des]: ordena o vetor DESORDENADO -----
+print("--- Cenario [Des] (vetor desordenado) ---")
+sorted_array = mergeFinal(array_desordenado)     
+find_primes(array_desordenado)                   
+
+# ----- Cenario [Ord]: ordena o vetor JA ORDENADO (mesmo TempoGerar) -----
+print("--- Cenario [Ord] (vetor ja ordenado) ---")
+mergeFinal(sorted_array)                          
+find_primes(sorted_array)                         
 
 # verify if the array is ordered
 for i in range(20):
     print(sorted_array[i])
 
-
-primosDesordenados = find_primes(array_desordenado)
-primosOrdenados = find_primes(sorted_array)
 fimTotal = time.perf_counter()
 tempo_total_geral = (fimTotal - inicioTotal) * 1000
 print(f"Tempo geral: {tempo_total_geral:.2f} ms")

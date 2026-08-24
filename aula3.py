@@ -48,9 +48,6 @@ def executar_experimento():
         for _ in range(n):
             vetor_original.append(random.randint(0, 10500))
             
-        # ---------------------------------------------------------
-        # BUBBLE SORT
-        # ---------------------------------------------------------
         vetor_bubble = copiar_vetor(vetor_original)
         
         # 1. Executar com vetor gerado (Desordenado)
@@ -69,9 +66,6 @@ def executar_experimento():
 
         print("-" * 40)
 
-        # ---------------------------------------------------------
-        # INSERTION SORT
-        # ---------------------------------------------------------
         vetor_insertion = copiar_vetor(vetor_original)
         
         # 3. Executar com vetor gerado (Desordenado)

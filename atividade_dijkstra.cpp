@@ -8,22 +8,27 @@
 using namespace std;
 
 typedef pair<int, int> Par;
-const int INF = numeric_limits<int>::max();
+const long long INF = numeric_limits<long long>::max() / 4;
 
 // Funcao Principal do Dijkstra
 void dijkstra(int V, const vector<vector<Par>>& grafo, int origem, bool imprimirDetalhos = true) {
+
     auto inicio = chrono::high_resolution_clock::now();
 
-    vector<int> dist(V, INF);
+    vector<long long> dist(V, INF);
     vector<int> pred(V, -1);
-    
-    priority_queue<Par, vector<Par>, greater<Par>> pq;
+
+    priority_queue<
+        pair<long long, int>,
+        vector<pair<long long, int>>,
+        greater<pair<long long, int>>
+    > pq;
 
     dist[origem] = 0;
     pq.push({0, origem});
 
     while (!pq.empty()) {
-        int d = pq.top().first;
+        long long d = pq.top().first;
         int u = pq.top().second;
         pq.pop();
 
@@ -57,6 +62,100 @@ void dijkstra(int V, const vector<vector<Par>>& grafo, int origem, bool imprimir
     cout << "Tempo de Execucao: " << tempoMs.count() << " ms" << endl << endl;
 }
 
+//Programação Dinâmica
+void programacaoDinamica(int V, const vector<vector<Par>>& grafo,
+                         int origem, bool imprimirDetalhes = true) {
+
+    auto inicio = chrono::high_resolution_clock::now();
+
+    // Cada linha representa uma etapa e cada coluna um vertice.
+    // dp[k][v] = menor custo para chegar a v usando ate k arestas.
+    vector<vector<long long>> dp(V, vector<long long>(V, INF));
+
+    // Caso base: distancia da origem ate ela mesma.
+    dp[0][origem] = 0;
+
+    // Preenchimento da tabela por etapas.
+    for (int k = 1; k < V; k++) {
+
+        // Mantem os resultados da etapa anterior.
+        dp[k] = dp[k - 1];
+
+        // Percorre todos os vertices.
+        for (int u = 0; u < V; u++) {
+
+            // Ignora vertices que ainda nao foram alcancados.
+            if (dp[k - 1][u] == INF) continue;
+
+            // Percorre as arestas que saem do vertice u.
+            for (auto aresta : grafo[u]) {
+                int v = aresta.first;
+                int peso = aresta.second;
+
+                long long novoCusto = dp[k - 1][u] + peso;
+
+                // Atualiza se encontrar um caminho mais barato.
+                if (novoCusto < dp[k][v]) {
+                    dp[k][v] = novoCusto;
+                }
+            }
+        }
+    }
+
+    // Verificacao de ciclos negativos alcancaveis pela origem.
+    bool cicloNegativo = false;
+
+    for (int u = 0; u < V; u++) {
+        if (dp[V - 1][u] == INF) continue;
+
+        for (auto aresta : grafo[u]) {
+            int v = aresta.first;
+            int peso = aresta.second;
+
+            if (dp[V - 1][u] + peso < dp[V - 1][v]) {
+                cicloNegativo = true;
+                break;
+            }
+        }
+
+        if (cicloNegativo) break;
+    }
+
+    auto fim = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> tempoMs = fim - inicio;
+
+    // Exibe os resultados da ultima etapa.
+    if (imprimirDetalhes) {
+        cout << "Vertice\tDistancia Minima" << endl;
+
+        for (int i = 0; i < V; i++) {
+            cout << i << "\t";
+
+            if (dp[V - 1][i] == INF) {
+                cout << "INF";
+            } else {
+                cout << dp[V - 1][i];
+            }
+
+            cout << endl;
+        }
+    }
+
+    if (cicloNegativo) {
+        cout << "ATENCAO: Foi detectado um ciclo negativo "
+             << "alcancavel a partir da origem." << endl;
+        cout << "As distancias dos vertices afetados podem "
+             << "nao possuir um valor minimo finito." << endl;
+    } else {
+        cout << "Nenhum ciclo negativo alcancavel foi detectado."
+             << endl;
+    }
+
+    cout << "Tempo de Execucao: " << tempoMs.count()
+         << " ms" << endl << endl;
+}
+
+
 // -------------------------------------------------------------
 // TESTE 1: Pequena Instancia (5 vertices)
 // -------------------------------------------------------------
@@ -74,7 +173,11 @@ void rodarTeste1_Pequeno() {
     grafo[2].push_back({4, 2});
     grafo[3].push_back({4, 7});
 
-    dijkstra(V, grafo, 0, true); // imprime a tabela completa
+    cout << "\n--- DIJKSTRA ---" << endl;
+    dijkstra(V, grafo, 0, true);
+
+    cout << "--- PROGRAMACAO DINAMICA ---" << endl;
+    programacaoDinamica(V, grafo, 0, true);
 }
 
 // -------------------------------------------------------------
@@ -93,7 +196,11 @@ void rodarTeste2_Medio() {
         }
     }
 
-    dijkstra(V, grafo, 0, true); // imprime a tabela completa
+    cout << "\n--- DIJKSTRA ---" << endl;
+    dijkstra(V, grafo, 0, true);
+
+    cout << "--- PROGRAMACAO DINAMICA ---" << endl;
+    programacaoDinamica(V, grafo, 0, true);
 }
 
 // -------------------------------------------------------------
@@ -104,7 +211,7 @@ void rodarTeste3_Grande() {
     int V = 2000;
     vector<vector<Par>> grafo(V);
 
-    // Gerando arestas aleatorias para simular um grafo denso
+    // Gerando um grafo aleatorio com aproximadamente 10 arestas por vertice
     srand(42); // semente fixa para reprodutibilidade
     for (int i = 0; i < V; i++) {
         for (int j = 0; j < 10; j++) { // cada vertice aponta para ~10 vizinhos
@@ -117,13 +224,44 @@ void rodarTeste3_Grande() {
     }
 
     // Passamos 'false' para nao poluir o terminal com 2.000 linhas de print
-    dijkstra(V, grafo, 0, false); 
+    cout << "\n--- DIJKSTRA ---" << endl;
+    dijkstra(V, grafo, 0, false);
+
+    cout << "--- PROGRAMACAO DINAMICA ---" << endl;
+    programacaoDinamica(V, grafo, 0, false);
+}
+
+// -------------------------------------------------------------
+// TESTE 4: Grafo com pesos negativos
+// -------------------------------------------------------------
+void rodarTeste4_PesosNegativos() {
+    cout << "=== TESTE 4: PESOS NEGATIVOS ===" << endl;
+
+    int V = 5;
+    vector<vector<Par>> grafo(V);
+
+    grafo[0].push_back({1, 6});
+    grafo[0].push_back({2, 7});
+    grafo[1].push_back({2, 8});
+    grafo[1].push_back({3, 5});
+    grafo[1].push_back({4, -4});
+    grafo[2].push_back({3, -3});
+    grafo[2].push_back({4, 9});
+    grafo[3].push_back({1, -2});
+    grafo[3].push_back({4, 7});
+
+    cout << "\n--- DIJKSTRA ---" << endl;
+    dijkstra(V, grafo, 0, true);
+
+    cout << "--- PROGRAMACAO DINAMICA ---" << endl;
+    programacaoDinamica(V, grafo, 0, true);
 }
 
 int main() {
     rodarTeste1_Pequeno();
     rodarTeste2_Medio();
     rodarTeste3_Grande();
+    rodarTeste4_PesosNegativos();
 
     return 0;
 }
